@@ -2,19 +2,23 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const newsTitleSchema = new Schema({
-  model: {
+  _id: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
+    default: mongoose.Types.ObjectId,
   },
-  title:{
+  title: {
     type: String,
-    required: true 
+    required: true,
+    index: true,
   },
-  sentiment:{
+  referenceLink: {
     type: String,
-    default: null
-  }
-  ,
+  },
+  sentiment: {
+    type: String,
+    default: null,
+  },
   createdOn: {
     type: Date,
     default: Date.now,

@@ -3,11 +3,15 @@ const NewsTitle = require("../../models/crawl_news/model");
 const { startSession } = require("mongoose");
 
 exports.getCoinDeskNews = async (req, res) => {
-  const data = await crawlFirstNews();
-  res.send({ data: data });
+  const data = await crawlCoinDesk();
+  let response = [];
+  if (data.length > 0) {
+    response = await saveNewNews(data);
+  }
+  res.send({ data: response });
 };
 
-const crawlFirstNews = async () => {
+const crawlCoinDesk = async () => {
   const browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
@@ -20,7 +24,10 @@ const crawlFirstNews = async () => {
   const data = await page.evaluate(() => {
     const elements = Array.from(document.querySelectorAll(".headline"));
     console.log("elements", elements);
-    return elements.map((el) => el.innerText);
+    return elements.map((el) => ({
+      title: el.innerText,
+      referenceLink: el.href,
+    }));
   });
   console.log("data", data);
   await browser.close();
@@ -31,10 +38,19 @@ const saveNewNews = async (newsData) => {
   const session = await startSession();
   try {
     session.startTransaction();
-    newsData.forEach((title) => {
-      NewsTitle.create({ title: title }, { session });
+    const newNews = [];
+    newsData.forEach((data) => {
+      console.log("In Loop");
+      newNews.push({ title: data.title, refrenceLink: data.referenceLink });
     });
+    console.log("newNews", newNews);
+    NewsTitle.create(newNews, { session });
     await session.commitTransaction();
     session.endSession();
-  } catch (error) { }
+    return newNews;
+  } catch (error) {
+    console.log("Something went wrong!", error);
+    await session.abortTransaction();
+    console.log("Aborted Transactions!");
+  }
 };
