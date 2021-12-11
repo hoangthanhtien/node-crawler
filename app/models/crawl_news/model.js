@@ -14,6 +14,7 @@ const newsTitleSchema = new Schema({
   },
   referenceLink: {
     type: String,
+    required: true
   },
   sentiment: {
     type: String,

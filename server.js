@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const cors = require('cors')
 
 // Connect to database
 
@@ -26,6 +27,7 @@ var queue = require('queue')
 var Queue = queue({ results: [] })
 Queue.start()
 
+app.use(cors())
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
@@ -51,6 +53,11 @@ app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
 })
 
+// Application level middlewares
+const validateMiddleware = require('./app/middlewares/validate')
+
+app.use(validateMiddleware.validateAccessToken)
+
 // Setup Routes
-const crawlCoinDeskRoute = require("./app/routers/crawl_news/coin_desk") 
+const crawlCoinDeskRoute = require("./app/routers/crawl_news/coin_desk")
 app.use('/crawl_coin_desk', crawlCoinDeskRoute)

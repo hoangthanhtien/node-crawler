@@ -3,6 +3,17 @@ const NewsTitle = require("../../models/crawl_news/model");
 const { startSession } = require("mongoose");
 
 exports.getCoinDeskNews = async (req, res) => {
+  const { page, results_per_page } = req.query
+  const total_docs = await NewsTitle.find({})
+    .countDocuments()
+  const total_pages = parseInt(total_docs / results_per_page)
+  const data = await NewsTitle.find({})
+    .skip((results_per_page * page) - results_per_page)
+    .limit(results_per_page)
+  res.send({ page, results_per_page, total_pages, data })
+}
+
+exports.crawlCoinDeskNews = async (req, res) => {
   const data = await crawlCoinDesk();
   let response = [];
   if (data.length > 0) {
@@ -41,7 +52,7 @@ const saveNewNews = async (newsData) => {
     const newNews = [];
     newsData.forEach((data) => {
       console.log("In Loop");
-      newNews.push({ title: data.title, refrenceLink: data.referenceLink });
+      newNews.push({ title: data.title, referenceLink: data.referenceLink });
     });
     console.log("newNews", newNews);
     NewsTitle.create(newNews, { session });
